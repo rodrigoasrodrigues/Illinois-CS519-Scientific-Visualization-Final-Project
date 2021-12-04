@@ -1,2 +1,2 @@
-# Illinois-CS519-Scientific-Vizualization-Final-Project
-Final Project for CS519 Scientific Vizualization
+# Illinois CS519 Scientific Visualization - Final Project
+This app is available at https://cs519.herokuapp.com/
