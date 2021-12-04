@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#####
+# precompiled python
+*.pyc
+# mac finder cache
+.DS_STORE
