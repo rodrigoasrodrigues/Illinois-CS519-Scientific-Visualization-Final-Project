@@ -44,7 +44,8 @@ def get_data(year, tournament_id):
     gen_links = (x for x in tournament_df.itertuples()) # the final does not link anywhere
     source = []
     target = []
-    color_data = []
+    color_data_node = list(tournament_df.winner_id)
+    color_data_link=[]
     winner_data = []
     names = [' x '.join(i) for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
     # names = ['' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
@@ -73,26 +74,29 @@ def get_data(year, tournament_id):
             tgt = len(indexes)-1
         target.append(tgt)
         winner_data.append(f'{winner_name} <br /> {score}')
-        color_data.append(winner)
+        color_data_node.append(winner)
+        color_data_link.append(winner)
     # player names at start
     treebase = [indexes[m] for m in source if m not in target]
     gen_treebase = (x for x in tournament_df.itertuples() if x.match_num in treebase)
     for match in gen_treebase:
         match_idx = indexes.index(match.match_num)
-        for player_id, player_name in [(match.winner_id,match.winner_name),(match.loser_id,match.loser_name)]:
+        for player_id, player_name in [[match.winner_id,match.winner_name], [match.loser_id,match.loser_name]]:
             indexes.append(player_id)
             player_idx = len(indexes)-1
             source.append(player_idx)
             target.append(match_idx)
             winner_data.append(player_name)
             names.append(player_name)
-            color_data.append(player_id)
-    color_set =list(set(color_data))
-    num_colors = len(color_set)
+            color_data_node.append(player_id)
+            color_data_link.append(player_id)
+    color_set = list(set(color_data_node))
+    num_colors = len(color_data_node)
     colors = random_palette(num_colors)
-    color_data = [colors[color_set.index(c)] for c in color_data]
+    color_data_node = [colors[color_set.index(c)] for c in color_data_node]
+    color_data_link = [colors[color_set.index(c)] for c in color_data_link]
 
-    return indexes, names, source, target, winner_data, color_data
+    return indexes, names, source, target, winner_data, color_data_node, color_data_link
 
 
 def tournament_view():
@@ -113,7 +117,7 @@ def tournament_view():
             target = data[3],
             value = np.ones(len(data[2])),
             customdata = data[4],
-            color = data[5],
+            color = data[6],
             hovertemplate='%{customdata}<extra></extra>', # <extra></extra> hides the number on the label
         ))])
 
