@@ -23,6 +23,7 @@ def drop_down_tournament():
     return ddl
 
 next_round = {
+    'F':None,
     'R128':'R64',
     'R64':'R32',
     'R32':'R16',
@@ -40,30 +41,58 @@ def get_data(year, tournament_id):
     tournament_df.columns=['match_num','score','round','winner_name', 'winner_id', 'loser_name', 'loser_id']
     # transform the data for the expected format
     indexes = list(tournament_df.match_num)
-    gen_links = (x for x in tournament_df.itertuples() if x.round != 'F') # the final does not link anywhere
+    gen_links = (x for x in tournament_df.itertuples()) # the final does not link anywhere
     source = []
     target = []
+    color_data = []
     winner_data = []
     names = [' x '.join(i) for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
+    # names = ['' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
+    players = {}
     for data in gen_links :
         current = data.match_num
         idx = indexes.index(current)
         source.append(idx)
         winner = data.winner_id
         winner_name = data.winner_name
+        players[winner] = winner_name
+        players[data.loser_id] = data.loser_name
         current_round = data.round
         score = data.score
         next_match_type = next_round[current_round]
-        next_match = tournament_df.loc[
-            ((tournament_df['winner_id']==winner) | (tournament_df['loser_id']==winner)) 
-            & (tournament_df['round']==next_match_type)
-            ,:].match_num.iloc[0]
-        tgt = indexes.index(next_match)
+        if next_match_type:
+            next_match = tournament_df.loc[
+                ((tournament_df['winner_id']==winner) | (tournament_df['loser_id']==winner))
+                & (tournament_df['round']==next_match_type)
+                ,:].match_num.iloc[0]
+            tgt = indexes.index(next_match)
+            
+        else:
+            indexes.append('F')
+            names.append(winner_name)
+            tgt = len(indexes)-1
         target.append(tgt)
         winner_data.append(f'{winner_name} <br /> {score}')
-        
+        color_data.append(winner)
+    # player names at start
+    treebase = [indexes[m] for m in source if m not in target]
+    gen_treebase = (x for x in tournament_df.itertuples() if x.match_num in treebase)
+    for match in gen_treebase:
+        match_idx = indexes.index(match.match_num)
+        for player_id, player_name in [(match.winner_id,match.winner_name),(match.loser_id,match.loser_name)]:
+            indexes.append(player_id)
+            player_idx = len(indexes)-1
+            source.append(player_idx)
+            target.append(match_idx)
+            winner_data.append(player_name)
+            names.append(player_name)
+            color_data.append(player_id)
+    color_set =list(set(color_data))
+    num_colors = len(color_set)
+    colors = random_palette(num_colors)
+    color_data = [colors[color_set.index(c)] for c in color_data]
 
-    return indexes, names, source, target, winner_data
+    return indexes, names, source, target, winner_data, color_data
 
 
 def tournament_view():
@@ -77,14 +106,14 @@ def tournament_view():
             label = data[1],
             customdata = data[1],
             hovertemplate='%{customdata}<extra></extra>', # <extra></extra> hides the number on the label
-            color = random_palette(len(data[1])),
+            color = data[5],
             ),
             link = dict(
             source = data[2], # indices correspond to labels, eg A1, A2, A2, B1, ...
             target = data[3],
             value = np.ones(len(data[2])),
             customdata = data[4],
-            color = random_palette(len(data[4])),
+            color = data[5],
             hovertemplate='%{customdata}<extra></extra>', # <extra></extra> hides the number on the label
         ))])
 
