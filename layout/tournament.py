@@ -41,10 +41,10 @@ def get_data(year, tournament_id):
     tournament_df.columns=['match_num','score','round','winner_name', 'winner_id', 'loser_name', 'loser_id']
     # transform the data for the expected format
     indexes = list(tournament_df.match_num)
+    color_data_node = list(tournament_df.winner_id)
     gen_links = (x for x in tournament_df.itertuples()) # the final does not link anywhere
     source = []
     target = []
-    color_data_node = list(tournament_df.winner_id)
     color_data_link=[]
     winner_data = []
     names = [' x '.join(i) for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
@@ -72,9 +72,9 @@ def get_data(year, tournament_id):
             indexes.append('F')
             names.append(winner_name)
             tgt = len(indexes)-1
+            color_data_node.append(winner)
         target.append(tgt)
         winner_data.append(f'{winner_name} <br /> {score}')
-        color_data_node.append(winner)
         color_data_link.append(winner)
     # player names at start
     treebase = [indexes[m] for m in source if m not in target]
