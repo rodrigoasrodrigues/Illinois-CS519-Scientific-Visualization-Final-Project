@@ -56,7 +56,7 @@ def drawMapGraph(df, xVal):
         npLocationX[index] = location[0] + (random.random()*2 - 1)*.08#(random.random()*2 - 1)*npBigSize[index]
         npLocationY[index] = location[1] + (random.random()*2 - 1)*npBigSize[index]
         index+=1
-    df_sample = pd.DataFrame({
+    formatted_df = pd.DataFrame({
         "Location": npBigIndex,
         "x": npLocationX,
         "y": npLocationY,
@@ -66,7 +66,7 @@ def drawMapGraph(df, xVal):
     })
     # Plotly Express version
     fig = px.scatter(
-        df_sample,
+        formatted_df,
         x="x",
         y="y",
         color="Number Of Serves",
@@ -149,26 +149,32 @@ def drawBarGraph(df):
     for i, loc in enumerate(npIndex):
         npIndex[i] = loc.replace("_", " ") #replace names so they are a bit more human readable (get rid of "_" and replace with " ")
     npVals = df.values[0].astype(np.int64) #grabs the values of the selected row
-    df_sample = pd.DataFrame({
+    formatted_df = pd.DataFrame({
         "Location": npIndex,
-        "Value": npVals
+        "Value": npVals,
     })
     fig = px.bar(
-        df_sample,
-        x=npIndex,
-        y=npVals,
+        formatted_df,
+        x="Location",
+        y="Value",
+        hover_data={"Location": False, "Value": True},
     )
-    #hiding axis labels
+    #changing axis labels
     #from: https://stackoverflow.com/questions/63386812/plotly-how-to-hide-axis-titles-in-a-plotly-express-figure-with-facets
     for axis in fig.layout:
         if type(fig.layout[axis]) == go.layout.YAxis:
-            fig.layout[axis].title.text = ''
+            fig.layout[axis].title.text = 'Number Of Serves'
         if type(fig.layout[axis]) == go.layout.XAxis:
-            fig.layout[axis].title.text = ''
+            fig.layout[axis].title.text = 'Location'
     return fig
 
 def match_placement_view():
+    #input format:
+    # [match_num]-M-[tourney_name]-R[draw_size]-[first_abc_order_name]-[second_abc_order_name]
     matchName = '19751219-M-Davis_Cup_World_Group_F-RR-Bjorn_Borg-Jiri_Hrebec'
+    tokenList = matchName.split('-')
+    player1Name = tokenList[len(tokenList) - 2].replace('_', ' ')
+    player2Name = tokenList[len(tokenList) - 1].replace('_', ' ')
     file = "charting-m-stats-ServeDirection.csv"
     file_plus_path = "data/" + file
     odf = pd.read_csv(file_plus_path,names=['match_id','row','deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t','err_net','err_wide','err_deep','err_wide_deep','err_foot','err_unknown'])
@@ -182,6 +188,7 @@ def match_placement_view():
     fig2 = drawMapGraph(df2,0.4)
     fig2Bar = drawBarGraph(df2)
 
+    #html/formatting stuff below >_<
     graph1 = dcc.Graph(
         id='graph-player1-placement',
         figure=fig1
@@ -231,7 +238,7 @@ def match_placement_view():
         [
             dbc.CardBody(
                 [
-                    html.H4("Player: (player1)", className="card-title"),
+                    html.H4("Player: " + player1Name, className="card-title"),
                 ]
             ),
         ]
@@ -240,7 +247,7 @@ def match_placement_view():
         [
             dbc.CardBody(
                 [
-                    html.H4("Player: (player2)", className="card-title"),
+                    html.H4("Player: " + player2Name, className="card-title"),
                 ]
             ),
         ]
@@ -254,13 +261,4 @@ def match_placement_view():
         dbc.Row(dbc.Col([player2Title])),
         dbc.Row(dbc.Col([group2])),
     ])
-    '''plot = dbc.Card([
-        html.Div([
-            dcc.Graph(
-                    id='graph-player1-placement',
-                    figure=fig
-                )
-            ])
-        ],
-        body=True)'''
     return plot
