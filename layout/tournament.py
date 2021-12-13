@@ -32,13 +32,14 @@ next_round = {
     'SF':'F',
 }
 
+
+
 def get_data(year, tournament_id):
-    filename=f'data/atp_matches_doubles_{year}.csv'
+    filename=f'data/atp_matches_{year}.csv'
     year_df = pd.read_csv(filename,index_col=False)
     # only what is needed for the plot
-    columns = ['match_num','score','round','winner1_name', 'winner1_id', 'loser1_name', 'loser1_id']
+    columns = ['match_num','score','round','winner_name', 'winner_id', 'loser_name', 'loser_id']
     tournament_df = year_df.loc[year_df['tourney_id'] == tournament_id, columns]
-    tournament_df.columns=['match_num','score','round','winner_name', 'winner_id', 'loser_name', 'loser_id']
     # transform the data for the expected format
     indexes = list(tournament_df.match_num)
     color_data_node = list(tournament_df.winner_id)
@@ -47,9 +48,10 @@ def get_data(year, tournament_id):
     target = []
     color_data_link=[]
     winner_data = []
-    names = [' x '.join(i) for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
-    # names = ['' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
+    hover_data = [' x '.join(i) for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
+    names = ['' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
     players = {}
+    # LINKS
     for data in gen_links :
         current = data.match_num
         idx = indexes.index(current)
@@ -68,9 +70,10 @@ def get_data(year, tournament_id):
                 ,:].match_num.iloc[0]
             tgt = indexes.index(next_match)
             
-        else:
+        else: # winner name
             indexes.append('F')
-            names.append(winner_name)
+            names.append(last_name_and_initials(winner_name))
+            hover_data.append(winner_name)
             tgt = len(indexes)-1
             color_data_node.append(winner)
         target.append(tgt)
@@ -87,7 +90,8 @@ def get_data(year, tournament_id):
             source.append(player_idx)
             target.append(match_idx)
             winner_data.append(player_name)
-            names.append(player_name)
+            names.append(last_name_and_initials(player_name))
+            hover_data.append(player_name)
             color_data_node.append(player_id)
             color_data_link.append(player_id)
     color_set = list(set(color_data_node))
@@ -96,28 +100,28 @@ def get_data(year, tournament_id):
     color_data_node = [colors[color_set.index(c)] for c in color_data_node]
     color_data_link = [colors[color_set.index(c)] for c in color_data_link]
 
-    return indexes, names, source, target, winner_data, color_data_node, color_data_link
+    return indexes, names, hover_data, source, target, winner_data, color_data_node, color_data_link
 
 
 def tournament_view():
     '''Displays Tournament View'''
-    data = get_data(2017,'2017-M020')
+    indexes, names, hover_data, source, target, winner_data, color_data_node, color_data_link = get_data(2017,'2017-M020')
     fig = go.Figure(data=[go.Sankey(
         node = dict(
             pad = 15,
             thickness = 20,
             line = dict(color = "black", width = 0.5),
-            label = data[1],
-            customdata = data[1],
+            label = names,
+            customdata = hover_data,
             hovertemplate='%{customdata}<extra></extra>', # <extra></extra> hides the number on the label
-            color = data[5],
+            color = color_data_node,
             ),
             link = dict(
-            source = data[2], # indices correspond to labels, eg A1, A2, A2, B1, ...
-            target = data[3],
-            value = np.ones(len(data[2])),
-            customdata = data[4],
-            color = data[6],
+            source = source, # indices correspond to labels, eg A1, A2, A2, B1, ...
+            target = target,
+            value = np.ones(len(source)),
+            customdata = winner_data,
+            color = color_data_link,
             hovertemplate='%{customdata}<extra></extra>', # <extra></extra> hides the number on the label
         ))])
 

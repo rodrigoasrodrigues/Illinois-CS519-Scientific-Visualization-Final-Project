@@ -153,3 +153,12 @@ colors = [
 
 def random_palette(k):
     return random.choices(colors,k=k)
+
+def last_name_and_initials(name):
+    parts = name.split(' ')
+    if len(parts) > 1:
+        lname = parts[-1]
+        initials = '. '.join([x[0] for x in parts[:-1] ])
+        result = f'{lname}, {initials}.'
+        return result
+    else: return name
