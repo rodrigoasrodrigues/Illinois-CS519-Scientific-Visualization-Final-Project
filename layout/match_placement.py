@@ -148,6 +148,11 @@ def drawBarGraph(df):
     npIndex = df.columns.values #grabs the names of the selected columns
     for i, loc in enumerate(npIndex):
         npIndex[i] = loc.replace("_", " ") #replace names so they are a bit more human readable (get rid of "_" and replace with " ")
+        words = npIndex[i].split(" ") #capitalizes each letter of every word
+        finalWords = []
+        for j, word in enumerate(words):
+            finalWords.append(word.capitalize())
+        npIndex[i] = ' '.join(finalWords)
     npVals = df.values[0].astype(np.int64) #grabs the values of the selected row
     formatted_df = pd.DataFrame({
         "Location": npIndex,
