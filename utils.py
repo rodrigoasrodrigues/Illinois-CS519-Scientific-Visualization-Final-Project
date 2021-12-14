@@ -145,7 +145,6 @@ colors = [
     'turquoise',
     'violet',
     'wheat',
-    'white',
     'whitesmoke',
     'yellow',
     'yellowgreen'

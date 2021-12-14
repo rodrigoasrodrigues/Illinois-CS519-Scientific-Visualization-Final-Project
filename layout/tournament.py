@@ -116,6 +116,7 @@ def tournament_view(tournament= '2018-560'):
     print(f'Selected {tournament}')
     indexes, names, hover_data, source, target, winner_data, color_data_node, color_data_link = get_data(tournament)
     fig = go.Figure(data=[go.Sankey(
+        arrangement='fixed',
         node = dict(
             pad = 15,
             thickness = 20,
@@ -123,7 +124,7 @@ def tournament_view(tournament= '2018-560'):
             label = names,
             customdata = hover_data,
             hovertemplate='%{customdata}<extra></extra>', # <extra></extra> hides the number on the label
-            color = color_data_node,
+            color = color_data_node
             ),
             link = dict(
             source = source, # indices correspond to labels, eg A1, A2, A2, B1, ...

@@ -1,6 +1,7 @@
 '''Displays Match Placement Plot'''
 from dash import dcc
 from dash import html
+from dash.dependencies import Input, Output
 import os
 import plotly.express as px
 import plotly.graph_objects as go
@@ -9,6 +10,7 @@ import pandas as pd
 import numpy as np
 import dash_bootstrap_components as dbc
 import random
+from server import app
 
 def drawMapGraph(df, xVal):
     location_map = {
@@ -173,6 +175,39 @@ def drawBarGraph(df):
             fig.layout[axis].title.text = 'Location'
     return fig
 
+graph_player1_cache=None
+
+@app.callback(
+    Output('graph-player1-placement', 'figure'),
+    Input('tornament-plot', 'clickData')
+)
+def graph_player1_placement(match):
+    global graph_player1_cache
+    print(match)
+    if 'depth' in str(match):
+        print('Node')
+    else:
+        print('Link')
+        if graph_player1_cache:
+            return graph_player1_cache
+    matchName = '19751219-M-Davis_Cup_World_Group_F-RR-Bjorn_Borg-Jiri_Hrebec'
+    tokenList = matchName.split('-')
+    player1Name = tokenList[len(tokenList) - 2].replace('_', ' ')
+    player2Name = tokenList[len(tokenList) - 1].replace('_', ' ')
+    file = "charting-m-stats-ServeDirection.csv"
+    file_plus_path = "data/" + file
+    odf = pd.read_csv(file_plus_path,names=['match_id','row','deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t','err_net','err_wide','err_deep','err_wide_deep','err_foot','err_unknown'])
+    df1 = odf.loc[(odf['match_id']==matchName) & (odf['row'] == '1 Total')]
+    df1 = pd.DataFrame(df1,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
+    fig1 = drawMapGraph(df1,0.4)
+    fig1Bar = drawBarGraph(df1)
+
+    df2 = odf.loc[(odf['match_id']==matchName) & (odf['row'] == '2 Total')]
+    df2 = pd.DataFrame(df2,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
+    fig = drawMapGraph(df2,0.4)
+    graph_player1_cache = fig
+    return fig
+
 def match_placement_view():
     #input format:
     # [match_num]-M-[tourney_name]-R[draw_size]-[first_abc_order_name]-[second_abc_order_name]
@@ -195,8 +230,7 @@ def match_placement_view():
 
     #html/formatting stuff below >_<
     graph1 = dcc.Graph(
-        id='graph-player1-placement',
-        figure=fig1
+        id='graph-player1-placement'
     )
     graph1Bar = dcc.Graph(
         id='graph-player1-placement-bar',
