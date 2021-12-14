@@ -15,7 +15,7 @@ from layout.player_performance import player_performance_view
 from layout.header import header
 from layout.footer import footer
 
-
+server = app.server
 app.layout = dbc.Container([
     dbc.Row(
             [
