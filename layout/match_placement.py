@@ -12,7 +12,11 @@ import dash_bootstrap_components as dbc
 import random
 from server import app
 
+NOT_FOUND_STRING = "Data Not Found"
+
 def drawMapGraph(df, xVal):
+    if df.empty:
+        return px.scatter(title=NOT_FOUND_STRING)
     location_map = {
         "deuce_wide": [xVal,.75],
         "deuce_middle": [xVal,.55], 
@@ -147,6 +151,8 @@ def drawMapGraph(df, xVal):
     return fig
 
 def drawBarGraph(df):
+    if df.empty:
+        return px.bar(title=NOT_FOUND_STRING)
     npIndex = df.columns.values #grabs the names of the selected columns
     for i, loc in enumerate(npIndex):
         npIndex[i] = loc.replace("_", " ") #replace names so they are a bit more human readable (get rid of "_" and replace with " ")
@@ -176,73 +182,223 @@ def drawBarGraph(df):
     return fig
 
 graph_player1_cache=None
+graph_player2_cache=None
+graph_player1_bar_cache=None
+graph_player2_bar_cache=None
+name_player1_cache=None
+name_player2_cache=None
+match_cache=None
+current_tournament=None
+
+#wish this could be done better but it works!
+def getTouramentFromValue(value):
+    valuePairs = {
+        '2018-560': 'US_Open',
+        '2018-540': 'Wimbledon',
+        '2018-520': 'Roland_Garros',
+        '2018-580': 'Australian_Open'
+    }
+    return valuePairs[value]
+
+#a simple way to format the round string from the depth value of the graph
+def getDepthStringFromInt(value):
+    depthList = ["N/A", "RR", "QF", "SF", "F", "N/A"]
+    return depthList[value]
+
+#grabs the round of the tournament (formatted), and player names. Names will be empty if the match isn't valid
+def getMatchInfo(match):
+    round = getDepthStringFromInt(match['points'][0]['depth'])
+    if round == "N/A":
+        return round, "", ""
+    customData = match['points'][0]['customdata']
+    splitData = customData.split('<br>')
+    splitNames = splitData[0].split('x')
+    name1 = splitNames[0].strip().replace(' ','_')
+    name2 = splitNames[1].strip().replace(' ','_')
+    return round, name1, name2
+
+#reads from the serve direction file and outputs a dataframe matching parameters
+def getMatchDataFrame(matchString, playerNum):
+    file = "charting-m-stats-ServeDirection.csv"
+    file_plus_path = "data/" + file
+    odf = pd.read_csv(file_plus_path,names=['match_id','row','deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t','err_net','err_wide','err_deep','err_wide_deep','err_foot','err_unknown'])
+    df = odf.loc[(odf['match_id'].str.contains(matchString,case=False, na=False)) & (odf['row'] == f'{playerNum} Total')]
+    df = pd.DataFrame(df,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
+    return df
+
+#ugly hack to get a callback from the dropdown value and store it here for reference
+@app.callback(
+    Output('hidden-div', 'children'),
+    Input('tournament-dropdown', 'value')
+)
+def updateGlobalTournament(info):
+    global current_tournament
+    current_tournament = getTouramentFromValue(info)
+    return info
 
 @app.callback(
     Output('graph-player1-placement', 'figure'),
     Input('tornament-plot', 'clickData')
 )
 def graph_player1_placement(match):
+    global match_cache
     global graph_player1_cache
-    print(match)
-    if 'depth' in str(match):
-        print('Node')
-    else:
-        print('Link')
+    global current_tournament
+    if match == match_cache:
         if graph_player1_cache:
             return graph_player1_cache
-    matchName = '19751219-M-Davis_Cup_World_Group_F-RR-Bjorn_Borg-Jiri_Hrebec'
-    tokenList = matchName.split('-')
-    player1Name = tokenList[len(tokenList) - 2].replace('_', ' ')
-    player2Name = tokenList[len(tokenList) - 1].replace('_', ' ')
-    file = "charting-m-stats-ServeDirection.csv"
-    file_plus_path = "data/" + file
-    odf = pd.read_csv(file_plus_path,names=['match_id','row','deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t','err_net','err_wide','err_deep','err_wide_deep','err_foot','err_unknown'])
-    df1 = odf.loc[(odf['match_id']==matchName) & (odf['row'] == '1 Total')]
-    df1 = pd.DataFrame(df1,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
-    fig1 = drawMapGraph(df1,0.4)
-    fig1Bar = drawBarGraph(df1)
+    round = None
+    name1 = None
+    name2 = None
+    if 'depth' not in str(match):
+        if graph_player1_cache:
+            return graph_player1_cache
+    else:
+        round, name1, name2 = getMatchInfo(match)
 
-    df2 = odf.loc[(odf['match_id']==matchName) & (odf['row'] == '2 Total')]
-    df2 = pd.DataFrame(df2,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
-    fig = drawMapGraph(df2,0.4)
+    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
+    df = getMatchDataFrame(matchString,1)
+
+    fig = drawMapGraph(df,0.3)
     graph_player1_cache = fig
+    match_cache = match #only occurs here (prevents redrawing graphs if th match is the same)
     return fig
 
+@app.callback(
+    Output('graph-player1-placement-bar', 'figure'),
+    Input('tornament-plot', 'clickData')
+)
+def graph_player1_bar(match):
+    global match_cache
+    global graph_player1_bar_cache
+    global current_tournament
+    if match == match_cache:
+        if graph_player1_bar_cache:
+            return graph_player1_bar_cache
+    round = None
+    name1 = None
+    name2 = None
+    if 'depth' not in str(match):
+        if graph_player1_bar_cache:
+            return graph_player1_bar_cache
+    else:
+        round, name1, name2 = getMatchInfo(match)
+
+    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
+    df = getMatchDataFrame(matchString,1)
+
+    fig = drawBarGraph(df)
+    graph_player1_bar_cache = fig
+    return fig
+
+@app.callback(
+    Output('graph-player2-placement', 'figure'),
+    Input('tornament-plot', 'clickData')
+)
+def graph_player2_placement(match):
+    global match_cache
+    global graph_player2_cache
+    global current_tournament
+    if match == match_cache:
+        if graph_player2_cache:
+            return graph_player2_cache
+    round = None
+    name1 = None
+    name2 = None
+    if 'depth' not in str(match):
+        if graph_player2_cache:
+            return graph_player2_cache
+    else:
+        round, name1, name2 = getMatchInfo(match)
+
+    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
+    df = getMatchDataFrame(matchString,2)
+
+    fig = drawMapGraph(df,0.3)
+    graph_player2_cache = fig
+    return fig
+
+@app.callback(
+    Output('graph-player2-placement-bar', 'figure'),
+    Input('tornament-plot', 'clickData')
+)
+def graph_player2_bar(match):
+    global match_cache
+    global graph_player2_bar_cache
+    global current_tournament
+    if match == match_cache:
+        if graph_player2_bar_cache:
+            return graph_player2_bar_cache
+    round = None
+    name1 = None
+    name2 = None
+    if 'depth' not in str(match):
+        if graph_player2_bar_cache:
+            return graph_player2_bar_cache
+    else:
+        round, name1, name2 = getMatchInfo(match)
+
+    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
+    df = getMatchDataFrame(matchString,2)
+
+    fig = drawBarGraph(df)
+    graph_player2_bar_cache = fig
+    return fig
+
+#update the names of the players
+@app.callback(
+    Output('player-1-name-placement', 'children'),
+    Input('tornament-plot', 'clickData')
+)
+def updatePlayer1Name(match):
+    global match_cache
+    global name_player1_cache
+    if match == match_cache:
+        if name_player1_cache:
+            return name_player1_cache
+    name = None
+    if 'depth' not in str(match):
+        if name_player1_cache:
+            return name_player1_cache
+    else:
+        _, name, _ = getMatchInfo(match)
+        name = f"Player: {name.replace('_',' ')}"
+    name_player1_cache = name
+    return name
+
+@app.callback(
+    Output('player-2-name-placement', 'children'),
+    Input('tornament-plot', 'clickData')
+)
+def updatePlayer2Name(match):
+    global match_cache
+    global name_player2_cache
+    if match == match_cache:
+        if name_player2_cache:
+            return name_player2_cache
+    name = None
+    if 'depth' not in str(match):
+        if name_player2_cache:
+            return name_player2_cache
+    else:
+        _, _, name = getMatchInfo(match)
+        name = f"Player: {name.replace('_',' ')}"
+    name_player2_cache = name
+    return name
+
 def match_placement_view():
-    #input format:
-    # [match_num]-M-[tourney_name]-R[draw_size]-[first_abc_order_name]-[second_abc_order_name]
-    matchName = '19751219-M-Davis_Cup_World_Group_F-RR-Bjorn_Borg-Jiri_Hrebec'
-    tokenList = matchName.split('-')
-    player1Name = tokenList[len(tokenList) - 2].replace('_', ' ')
-    player2Name = tokenList[len(tokenList) - 1].replace('_', ' ')
-    file = "charting-m-stats-ServeDirection.csv"
-    file_plus_path = "data/" + file
-    odf = pd.read_csv(file_plus_path,names=['match_id','row','deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t','err_net','err_wide','err_deep','err_wide_deep','err_foot','err_unknown'])
-    df1 = odf.loc[(odf['match_id']==matchName) & (odf['row'] == '1 Total')]
-    df1 = pd.DataFrame(df1,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
-    fig1 = drawMapGraph(df1,0.4)
-    fig1Bar = drawBarGraph(df1)
-
-    df2 = odf.loc[(odf['match_id']==matchName) & (odf['row'] == '2 Total')]
-    df2 = pd.DataFrame(df2,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
-    fig2 = drawMapGraph(df2,0.4)
-    fig2Bar = drawBarGraph(df2)
-
     #html/formatting stuff below >_<
     graph1 = dcc.Graph(
         id='graph-player1-placement'
     )
     graph1Bar = dcc.Graph(
         id='graph-player1-placement-bar',
-        figure=fig1Bar
     )
     graph2 = dcc.Graph(
         id='graph-player2-placement',
-        figure=fig2
     )
     graph2Bar = dcc.Graph(
         id='graph-player2-placement-bar',
-        figure=fig2Bar
     )
     graph1Plot = dbc.Card(
         [
@@ -277,7 +433,7 @@ def match_placement_view():
         [
             dbc.CardBody(
                 [
-                    html.H4("Player: " + player1Name, className="card-title"),
+                    html.H4("Player: ", className="card-title", id="player-1-name-placement"),
                 ]
             ),
         ]
@@ -286,12 +442,12 @@ def match_placement_view():
         [
             dbc.CardBody(
                 [
-                    html.H4("Player: " + player2Name, className="card-title"),
+                    html.H4("Player: ", className="card-title", id="player-2-name-placement"),
                 ]
             ),
         ]
     )
-
+    hiddenStateDiv = html.Div(id='hidden-div', style={'display':'none'})
     group1 = dbc.CardGroup([graph1Plot,graph1BarPlot])
     group2 = dbc.CardGroup([graph2Plot,graph2BarPlot])
     plot = dbc.Card([
@@ -299,5 +455,6 @@ def match_placement_view():
         dbc.Row(dbc.Col([group1])),
         dbc.Row(dbc.Col([player2Title])),
         dbc.Row(dbc.Col([group2])),
+        hiddenStateDiv
     ])
     return plot
