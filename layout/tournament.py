@@ -53,7 +53,7 @@ def get_data(tournament_id):
     target = []
     color_data_link=[]
     winner_data = []
-    hover_data = [' x '.join(i) for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
+    hover_data = [f' {i[0]} x {i[1]} <br> {i[2]}' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"],tournament_df["score"])]
     names = ['' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
     players = {}
     # LINKS
