@@ -1,4 +1,6 @@
 '''Displays Tournament View'''
+import dash
+from dash.dependencies import Input, Output
 from dash import dcc
 from dash import html
 from utils import *
@@ -8,17 +10,19 @@ import dash_bootstrap_components as dbc
 import plotly.figure_factory as ff
 import numpy as np
 import plotly.graph_objects as go
+from server import app
 
 def drop_down_tournament():
     '''Displays Tournament Selection Drop Down'''
     ddl = dcc.Dropdown(
-            id='demo-dropdown',
+            id='tournament-dropdown',
             options=[
-                {'label': 'New York City', 'value': 'NYC'},
-                {'label': 'Montreal', 'value': 'MTL'},
-                {'label': 'San Francisco', 'value': 'SF'}
+                {'label': '2018 - US Open', 'value': '2018-560'},
+                {'label': '2018 - Wimbledon', 'value': '2018-540'},
+                {'label': '2018 - Roland Garros', 'value': '2018-520'},
+                {'label': '2018 - Australian Open', 'value': '2018-580'}
             ],
-            value='NYC'
+            value='2018-560'
         )
     return ddl
 
@@ -34,7 +38,8 @@ next_round = {
 
 
 
-def get_data(year, tournament_id):
+def get_data(tournament_id):
+    year = tournament_id.split('-')[0]
     filename=f'data/atp_matches_{year}.csv'
     year_df = pd.read_csv(filename,index_col=False)
     # only what is needed for the plot
@@ -43,12 +48,12 @@ def get_data(year, tournament_id):
     # transform the data for the expected format
     indexes = list(tournament_df.match_num)
     color_data_node = list(tournament_df.winner_id)
-    gen_links = (x for x in tournament_df.itertuples()) # the final does not link anywhere
+    gen_links = (x for x in tournament_df.itertuples() if x.round in ['F','SF','QF','R16']) 
     source = []
     target = []
     color_data_link=[]
     winner_data = []
-    hover_data = [' x '.join(i) for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
+    hover_data = [f' {i[0]} x {i[1]} <br> {i[2]}' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"],tournament_df["score"])]
     names = ['' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
     players = {}
     # LINKS
@@ -102,10 +107,14 @@ def get_data(year, tournament_id):
 
     return indexes, names, hover_data, source, target, winner_data, color_data_node, color_data_link
 
-
-def tournament_view():
+@app.callback(
+    Output('tornament-plot', 'figure'),
+    Input('tournament-dropdown', 'value')
+)
+def tournament_view(tournament= '2018-560'):
     '''Displays Tournament View'''
-    indexes, names, hover_data, source, target, winner_data, color_data_node, color_data_link = get_data(2017,'2017-M020')
+    print(f'Selected {tournament}')
+    indexes, names, hover_data, source, target, winner_data, color_data_node, color_data_link = get_data(tournament)
     fig = go.Figure(data=[go.Sankey(
         node = dict(
             pad = 15,
@@ -125,20 +134,4 @@ def tournament_view():
             hovertemplate='%{customdata}<extra></extra>', # <extra></extra> hides the number on the label
         ))])
 
-
-
-    plot = dbc.Card([
-        html.Div([
-            dcc.Graph(
-                    id='tornament-plot',
-                    figure=fig
-                )
-            ])
-        ],
-        body=True)
-
-    layout = html.Div([
-        drop_down_tournament(),
-        plot
-    ])
-    return layout
+    return fig
