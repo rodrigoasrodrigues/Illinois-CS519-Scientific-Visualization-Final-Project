@@ -3,16 +3,18 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 
 import dash
-
+from dash import html
 import dash_bootstrap_components as dbc
-from layout.tournament import tournament_view
+from dash import dcc
+from server import app
+
+from layout.tournament import tournament_view, drop_down_tournament
 from layout.match_details import match_details_view
 from layout.match_placement import match_placement_view
 from layout.player_performance import player_performance_view
 from layout.header import header
 from layout.footer import footer
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP,"/assets/style.css"])
-server = app.server
+
 
 app.layout = dbc.Container([
     dbc.Row(
@@ -23,7 +25,17 @@ app.layout = dbc.Container([
         ),
     dbc.Row(
             [
-                dbc.Col(tournament_view(), sm=12, md=8, lg=6, className="mb-4"),
+                dbc.Col([html.Div([
+                    drop_down_tournament(),
+                    dbc.Card([
+                    html.Div([
+                        dcc.Graph(
+                                id='tornament-plot'
+                            )])
+                    ],
+                    body=True)
+                ])]
+                , sm=12, md=8, lg=6, className="mb-4"),
                 dbc.Col(match_details_view(),sm=12, md=4, lg=6, className="mb-4"),
             ],
             align="center"
@@ -45,6 +57,7 @@ app.layout = dbc.Container([
 
     ],
     fluid=True)
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
