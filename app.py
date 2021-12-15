@@ -25,29 +25,30 @@ app.layout = dbc.Container([
         ),
     dbc.Row(
             [
-                dbc.Col([html.Div([
-                    drop_down_tournament(),
-                    dbc.Card([
-                    html.Div([
-                        dcc.Graph(
-                                id='tornament-plot'
-                            )])
+                dbc.Col(
+                    dbc.Row([
+                        html.Div([
+                            drop_down_tournament(),
+                            dbc.Card([
+                            html.Div([
+                                dcc.Graph(
+                                        id='tornament-plot'
+                                    )])
+                            ],
+                            body=True),
+                            match_placement_view()
+                        ])
+                    ])
+                    , sm=12, md=8, lg=6, className="mb-4"
+                ),
+                dbc.Col([
+                    match_details_view(),
+                    player_performance_view()
+                ]
+                ,sm=12, md=4, lg=6, className="mb-4"),
                     ],
-                    body=True)
-                ])]
-                , sm=12, md=8, lg=6, className="mb-4"),
-                dbc.Col(match_details_view(),sm=12, md=4, lg=6, className="mb-4"),
-            ],
-            align="center"
+                    align="center"
         ),
-    dbc.Row(
-        [
-            dbc.Col(match_placement_view(), sm=12, md=8, lg=6, className="mb-4"),
-            dbc.Col(player_performance_view(),sm=12, md=4, lg=6, className="mb-4"),
-        ],
-        align="center",
-        className="mb-4" # margin bottom 4
-    ),
     dbc.Row(
             [
                 footer(),

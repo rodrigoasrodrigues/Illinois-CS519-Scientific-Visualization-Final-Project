@@ -113,7 +113,6 @@ def get_data(tournament_id):
 )
 def tournament_view(tournament= '2018-560'):
     '''Displays Tournament View'''
-    print(f'Selected {tournament}')
     indexes, names, hover_data, source, target, winner_data, color_data_node, color_data_link = get_data(tournament)
     fig = go.Figure(data=[go.Sankey(
         arrangement='fixed',
