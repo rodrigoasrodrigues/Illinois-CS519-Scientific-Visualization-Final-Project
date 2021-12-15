@@ -59,7 +59,7 @@ def drawMapGraph(df, xVal):
     #add some random spreading to the points
     for i in npBigIndex:
         location = location_map[i]
-        npLocationX[index] = location[0] + (random.random()*2 - 1)*.08#(random.random()*2 - 1)*npBigSize[index]
+        npLocationX[index] = location[0] + (random.random()*2 - 1)*.04#(random.random()*2 - 1)*npBigSize[index]
         npLocationY[index] = location[1] + (random.random()*2 - 1)*npBigSize[index]
         index+=1
     formatted_df = pd.DataFrame({
@@ -271,19 +271,20 @@ def update_graphs(match):
     df1 = getMatchDataFrame(matchString,1)
     df2 = getMatchDataFrame(matchString,2)
 
-    fig1 = drawMapGraph(df1,0.3)
+    fig1 = drawMapGraph(df1,0.34)
     fig1Bar = drawBarGraph(df1)
 
-    fig2 = drawMapGraph(df2,0.3)
+    fig2 = drawMapGraph(df2,0.34)
     fig2Bar = drawBarGraph(df2)
 
     name1 = f"Player: {name1.replace('_',' ')}"
     name2 = f"Player: {name2.replace('_',' ')}"
-
     graph_player1_cache = fig1
     graph_player1_bar_cache = fig1Bar
     graph_player2_cache = fig2
     graph_player2_bar_cache = fig2Bar
+    name_player1_cache = name1
+    name_player2_cache = name2
     match_cache = match #only occurs here (prevents redrawing graphs if the match is the same)
     return fig1, fig1Bar, fig2, fig2Bar, name1, name2
 
