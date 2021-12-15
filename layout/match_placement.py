@@ -59,7 +59,7 @@ def drawMapGraph(df, xVal):
     #add some random spreading to the points
     for i in npBigIndex:
         location = location_map[i]
-        npLocationX[index] = location[0] + (random.random()*2 - 1)*.08#(random.random()*2 - 1)*npBigSize[index]
+        npLocationX[index] = location[0] + (random.random()*2 - 1)*.04#(random.random()*2 - 1)*npBigSize[index]
         npLocationY[index] = location[1] + (random.random()*2 - 1)*npBigSize[index]
         index+=1
     formatted_df = pd.DataFrame({
@@ -255,22 +255,14 @@ def update_graphs(match):
     global name_player2_cache
     global current_tournament
     if match == match_cache:
-        print("Match matches with cache - do nothing?")
         if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
-            print("Did nothing with node because match was already cached")
             return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
-        else:
-            print("Going through with match because caches were missing data")
     round = None
     name1 = None
     name2 = None
     if 'depth' not in str(match):
-        print("Match was accessed from a link - do nothing?")
         if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
-            print("Returning caches as a result of a link click (not updating graphs)")
             return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
-        else:
-            print("Not returning caches from link click because they are missing data")
     else:
         round, name1, name2 = getMatchInfo(match)
 
@@ -278,15 +270,14 @@ def update_graphs(match):
     df1 = getMatchDataFrame(matchString,1)
     df2 = getMatchDataFrame(matchString,2)
 
-    fig1 = drawMapGraph(df1,0.3)
+    fig1 = drawMapGraph(df1,0.34)
     fig1Bar = drawBarGraph(df1)
 
-    fig2 = drawMapGraph(df2,0.3)
+    fig2 = drawMapGraph(df2,0.34)
     fig2Bar = drawBarGraph(df2)
 
     name1 = f"Player: {name1.replace('_',' ')}"
     name2 = f"Player: {name2.replace('_',' ')}"
-    print("Drawing tables for" + name1 + "x" + name2)
     graph_player1_cache = fig1
     graph_player1_bar_cache = fig1Bar
     graph_player2_cache = fig2
