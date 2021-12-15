@@ -255,14 +255,22 @@ def update_graphs(match):
     global name_player2_cache
     global current_tournament
     if match == match_cache:
+        print("Match matches with cache - do nothing?")
         if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
+            print("Did nothing with node because match was already cached")
             return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
+        else:
+            print("Going through with match because caches were missing data")
     round = None
     name1 = None
     name2 = None
     if 'depth' not in str(match):
+        print("Match was accessed from a link - do nothing?")
         if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
+            print("Returning caches as a result of a link click (not updating graphs)")
             return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
+        else:
+            print("Not returning caches from link click because they are missing data")
     else:
         round, name1, name2 = getMatchInfo(match)
 
@@ -278,11 +286,13 @@ def update_graphs(match):
 
     name1 = f"Player: {name1.replace('_',' ')}"
     name2 = f"Player: {name2.replace('_',' ')}"
-
+    print("Drawing tables for" + name1 + "x" + name2)
     graph_player1_cache = fig1
     graph_player1_bar_cache = fig1Bar
     graph_player2_cache = fig2
     graph_player2_bar_cache = fig2Bar
+    name_player1_cache = name1
+    name_player2_cache = name2
     match_cache = match #only occurs here (prevents redrawing graphs if the match is the same)
     return fig1, fig1Bar, fig2, fig2Bar, name1, name2
 
