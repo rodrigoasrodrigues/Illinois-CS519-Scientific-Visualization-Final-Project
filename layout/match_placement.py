@@ -264,6 +264,8 @@ def update_graphs(match):
     if 'depth' not in str(match):
         if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
             return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
+        else:
+            round, name1, name2 = "N/A","",""
     else:
         round, name1, name2 = getMatchInfo(match)
 
