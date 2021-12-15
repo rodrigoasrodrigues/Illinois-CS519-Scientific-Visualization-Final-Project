@@ -53,7 +53,7 @@ def get_data(tournament_id):
     target = []
     color_data_link=[]
     winner_data = []
-    hover_data = [f' {i[0]} x {i[1]} <br> {i[2]}' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"],tournament_df["score"])]
+    hover_data = [[i[3],f' {i[0]} x {i[1]} <br> {i[2]}'] for i in zip(tournament_df["winner_name"],tournament_df["loser_name"],tournament_df["score"],tournament_df["match_num"])]
     names = ['' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
     players = {}
     # LINKS
@@ -78,7 +78,7 @@ def get_data(tournament_id):
         else: # winner name
             indexes.append('F')
             names.append(last_name_and_initials(winner_name))
-            hover_data.append(winner_name)
+            hover_data.append([0,winner_name])
             tgt = len(indexes)-1
             color_data_node.append(winner)
         target.append(tgt)
@@ -96,7 +96,7 @@ def get_data(tournament_id):
             target.append(match_idx)
             winner_data.append(player_name)
             names.append(last_name_and_initials(player_name))
-            hover_data.append(player_name)
+            hover_data.append([0,player_name])
             color_data_node.append(player_id)
             color_data_link.append(player_id)
     color_set = list(set(color_data_node))
@@ -122,7 +122,7 @@ def tournament_view(tournament= '2018-560'):
             line = dict(color = "black", width = 0.5),
             label = names,
             customdata = hover_data,
-            hovertemplate='%{customdata}<extra></extra>', # <extra></extra> hides the number on the label
+            hovertemplate='%{customdata[1]}<extra></extra>', # <extra></extra> hides the number on the label
             color = color_data_node
             ),
             link = dict(
