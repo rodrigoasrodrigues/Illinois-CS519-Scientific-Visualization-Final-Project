@@ -238,153 +238,53 @@ def updateGlobalTournament(info):
 
 @app.callback(
     Output('graph-player1-placement', 'figure'),
-    Input('tornament-plot', 'clickData')
-)
-def graph_player1_placement(match):
-    global match_cache
-    global graph_player1_cache
-    global current_tournament
-    if match == match_cache:
-        if graph_player1_cache:
-            return graph_player1_cache
-    round = None
-    name1 = None
-    name2 = None
-    if 'depth' not in str(match):
-        if graph_player1_cache:
-            return graph_player1_cache
-    else:
-        round, name1, name2 = getMatchInfo(match)
-
-    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
-    df = getMatchDataFrame(matchString,1)
-
-    fig = drawMapGraph(df,0.3)
-    graph_player1_cache = fig
-    match_cache = match #only occurs here (prevents redrawing graphs if th match is the same)
-    return fig
-
-@app.callback(
     Output('graph-player1-placement-bar', 'figure'),
-    Input('tornament-plot', 'clickData')
-)
-def graph_player1_bar(match):
-    global match_cache
-    global graph_player1_bar_cache
-    global current_tournament
-    if match == match_cache:
-        if graph_player1_bar_cache:
-            return graph_player1_bar_cache
-    round = None
-    name1 = None
-    name2 = None
-    if 'depth' not in str(match):
-        if graph_player1_bar_cache:
-            return graph_player1_bar_cache
-    else:
-        round, name1, name2 = getMatchInfo(match)
-
-    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
-    df = getMatchDataFrame(matchString,1)
-
-    fig = drawBarGraph(df)
-    graph_player1_bar_cache = fig
-    return fig
-
-@app.callback(
     Output('graph-player2-placement', 'figure'),
-    Input('tornament-plot', 'clickData')
-)
-def graph_player2_placement(match):
-    global match_cache
-    global graph_player2_cache
-    global current_tournament
-    if match == match_cache:
-        if graph_player2_cache:
-            return graph_player2_cache
-    round = None
-    name1 = None
-    name2 = None
-    if 'depth' not in str(match):
-        if graph_player2_cache:
-            return graph_player2_cache
-    else:
-        round, name1, name2 = getMatchInfo(match)
-
-    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
-    df = getMatchDataFrame(matchString,2)
-
-    fig = drawMapGraph(df,0.3)
-    graph_player2_cache = fig
-    return fig
-
-@app.callback(
     Output('graph-player2-placement-bar', 'figure'),
-    Input('tornament-plot', 'clickData')
-)
-def graph_player2_bar(match):
-    global match_cache
-    global graph_player2_bar_cache
-    global current_tournament
-    if match == match_cache:
-        if graph_player2_bar_cache:
-            return graph_player2_bar_cache
-    round = None
-    name1 = None
-    name2 = None
-    if 'depth' not in str(match):
-        if graph_player2_bar_cache:
-            return graph_player2_bar_cache
-    else:
-        round, name1, name2 = getMatchInfo(match)
-
-    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
-    df = getMatchDataFrame(matchString,2)
-
-    fig = drawBarGraph(df)
-    graph_player2_bar_cache = fig
-    return fig
-
-#update the names of the players
-@app.callback(
     Output('player-1-name-placement', 'children'),
-    Input('tornament-plot', 'clickData')
-)
-def updatePlayer1Name(match):
-    global match_cache
-    global name_player1_cache
-    if match == match_cache:
-        if name_player1_cache:
-            return name_player1_cache
-    name = None
-    if 'depth' not in str(match):
-        if name_player1_cache:
-            return name_player1_cache
-    else:
-        _, name, _ = getMatchInfo(match)
-        name = f"Player: {name.replace('_',' ')}"
-    name_player1_cache = name
-    return name
-
-@app.callback(
     Output('player-2-name-placement', 'children'),
     Input('tornament-plot', 'clickData')
 )
-def updatePlayer2Name(match):
+def update_graphs(match):
     global match_cache
+    global graph_player1_cache
+    global graph_player1_bar_cache
+    global graph_player2_cache
+    global graph_player2_bar_cache
+    global name_player1_cache
     global name_player2_cache
+    global current_tournament
     if match == match_cache:
-        if name_player2_cache:
-            return name_player2_cache
-    name = None
+        if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
+            return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
+    round = None
+    name1 = None
+    name2 = None
     if 'depth' not in str(match):
-        if name_player2_cache:
-            return name_player2_cache
+        if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
+            return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
     else:
-        _, _, name = getMatchInfo(match)
-        name = f"Player: {name.replace('_',' ')}"
-    name_player2_cache = name
-    return name
+        round, name1, name2 = getMatchInfo(match)
+
+    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
+    df1 = getMatchDataFrame(matchString,1)
+    df2 = getMatchDataFrame(matchString,2)
+
+    fig1 = drawMapGraph(df1,0.3)
+    fig1Bar = drawBarGraph(df1)
+
+    fig2 = drawMapGraph(df2,0.3)
+    fig2Bar = drawBarGraph(df2)
+
+    name1 = f"Player: {name1.replace('_',' ')}"
+    name2 = f"Player: {name2.replace('_',' ')}"
+
+    graph_player1_cache = fig1
+    graph_player1_bar_cache = fig1Bar
+    graph_player2_cache = fig2
+    graph_player2_bar_cache = fig2Bar
+    match_cache = match #only occurs here (prevents redrawing graphs if the match is the same)
+    return fig1, fig1Bar, fig2, fig2Bar, name1, name2
 
 def match_placement_view():
     #html/formatting stuff below >_<
