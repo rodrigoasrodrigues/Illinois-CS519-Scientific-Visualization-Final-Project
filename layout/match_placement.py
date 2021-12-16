@@ -11,6 +11,7 @@ import numpy as np
 import dash_bootstrap_components as dbc
 import random
 from server import app
+from utils import get_numerical_label_values
 
 NOT_FOUND_STRING = "Data Not Found"
 
@@ -254,6 +255,9 @@ def update_graphs(match):
     global name_player1_cache
     global name_player2_cache
     global current_tournament
+    # print(match)
+    print('Match numbers:')
+    print(get_numerical_label_values(match))
     if match == match_cache:
         if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
             return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
@@ -263,6 +267,8 @@ def update_graphs(match):
     if 'depth' not in str(match):
         if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
             return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
+        else:
+            round, name1, name2 = "N/A","",""
     else:
         round, name1, name2 = getMatchInfo(match)
 
