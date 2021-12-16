@@ -161,3 +161,10 @@ def last_name_and_initials(name):
         result = f'{lname}, {initials}.'
         return result
     else: return name
+
+def get_numerical_label_values(strobj):
+    vals = []
+    parts = str(strobj).split('#')
+    for i in range(1, len(parts), 2):
+        vals.append(parts[i])
+    return vals
