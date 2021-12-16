@@ -13,8 +13,57 @@ import random
 from server import app
 from utils import get_numerical_label_values
 
-NOT_FOUND_STRING = "Data Not Found"
+NOT_FOUND_STRING = "DETAILED DATA NOT AVAILABLE"
 
+#sets up our global variables
+graph_player1_cache=None
+graph_player2_cache=None
+graph_player1_bar_cache=None
+graph_player2_bar_cache=None
+name_player1_cache=None
+name_player2_cache=None
+match_cache=None
+
+#reads from the file
+file = "charting-m-stats-ServeDirection.csv"
+file_plus_path = "data/" + file
+odf = pd.read_csv(file_plus_path,names=['match_id','row','deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t','err_net','err_wide','err_deep','err_wide_deep','err_foot','err_unknown'])
+
+#maps the tournament id from the dropdown to the match-id format
+def getTouramentFromValue(value):
+    valuePairs = {
+        '2018-560': 'US_Open',
+        '2018-540': 'Wimbledon',
+        '2018-520': 'Roland_Garros',
+        '2018-580': 'Australian_Open',
+        'None': 'US_Open'
+    }
+    return valuePairs[value]
+
+#a simple way to format the round string from the depth value of the graph
+def getDepthStringFromInt(value):
+    depthList = ["N/A", "RR", "QF", "SF", "F", "N/A"]
+    return depthList[value]
+
+#grabs the round of the tournament (formatted), and player names. Names will be empty if the match isn't valid
+def getMatchInfo(match):
+    round = getDepthStringFromInt(match['points'][0]['depth'])
+    if round == "N/A":
+        return round, "", ""
+    customData = match['points'][0]['customdata']
+    splitData = customData.split('<br>')
+    splitNames = splitData[0].split(' x ')
+    name1 = splitNames[0].strip().replace(' ','_')
+    name2 = splitNames[1].strip().replace(' ','_')
+    return round, name1, name2
+
+#reads from the serve direction file and outputs a dataframe matching parameters
+def getMatchDataFrame(matchString, playerNum):
+    df = odf.loc[(odf['match_id'].str.contains(matchString,case=False, na=False)) & (odf['row'] == f'{playerNum} Total')]
+    df = pd.DataFrame(df,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
+    return df
+
+#draws the courts. df is a dataframe and xVal is the 'center' point for the random xValue for the court drawing distribution
 def drawMapGraph(df, xVal):
     if df.empty:
         return px.scatter(title=NOT_FOUND_STRING)
@@ -151,6 +200,7 @@ def drawMapGraph(df, xVal):
             trace["showlegend"] = False
     return fig
 
+#draws the bar graphs for player serve placement
 def drawBarGraph(df):
     if df.empty:
         return px.bar(title=NOT_FOUND_STRING)
@@ -182,61 +232,7 @@ def drawBarGraph(df):
             fig.layout[axis].title.text = 'Location'
     return fig
 
-graph_player1_cache=None
-graph_player2_cache=None
-graph_player1_bar_cache=None
-graph_player2_bar_cache=None
-name_player1_cache=None
-name_player2_cache=None
-match_cache=None
-current_tournament=None
-
-#wish this could be done better but it works!
-def getTouramentFromValue(value):
-    valuePairs = {
-        '2018-560': 'US_Open',
-        '2018-540': 'Wimbledon',
-        '2018-520': 'Roland_Garros',
-        '2018-580': 'Australian_Open'
-    }
-    return valuePairs[value]
-
-#a simple way to format the round string from the depth value of the graph
-def getDepthStringFromInt(value):
-    depthList = ["N/A", "RR", "QF", "SF", "F", "N/A"]
-    return depthList[value]
-
-#grabs the round of the tournament (formatted), and player names. Names will be empty if the match isn't valid
-def getMatchInfo(match):
-    round = getDepthStringFromInt(match['points'][0]['depth'])
-    if round == "N/A":
-        return round, "", ""
-    customData = match['points'][0]['customdata']
-    splitData = customData.split('<br>')
-    splitNames = splitData[0].split('x')
-    name1 = splitNames[0].strip().replace(' ','_')
-    name2 = splitNames[1].strip().replace(' ','_')
-    return round, name1, name2
-
-#reads from the serve direction file and outputs a dataframe matching parameters
-def getMatchDataFrame(matchString, playerNum):
-    file = "charting-m-stats-ServeDirection.csv"
-    file_plus_path = "data/" + file
-    odf = pd.read_csv(file_plus_path,names=['match_id','row','deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t','err_net','err_wide','err_deep','err_wide_deep','err_foot','err_unknown'])
-    df = odf.loc[(odf['match_id'].str.contains(matchString,case=False, na=False)) & (odf['row'] == f'{playerNum} Total')]
-    df = pd.DataFrame(df,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
-    return df
-
-#ugly hack to get a callback from the dropdown value and store it here for reference
-@app.callback(
-    Output('hidden-div', 'children'),
-    Input('tournament-dropdown', 'value')
-)
-def updateGlobalTournament(info):
-    global current_tournament
-    current_tournament = getTouramentFromValue(info)
-    return info
-
+#updates the figures when the tournament plot is clicked
 @app.callback(
     Output('graph-player1-placement', 'figure'),
     Output('graph-player1-placement-bar', 'figure'),
@@ -247,6 +243,7 @@ def updateGlobalTournament(info):
     Input('tornament-plot', 'clickData')
 )
 def update_graphs(match):
+    #data we may write to
     global match_cache
     global graph_player1_cache
     global graph_player1_bar_cache
@@ -254,47 +251,67 @@ def update_graphs(match):
     global graph_player2_bar_cache
     global name_player1_cache
     global name_player2_cache
-    global current_tournament
-    # print(match)
-    print('Match numbers:')
-    print(get_numerical_label_values(match))
-    if match == match_cache:
-        if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
-            return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
-    round = None
-    name1 = None
-    name2 = None
+    
+    #setting up some variables that will be used to generate our match-id string
+    round = 'F'
+    name1 = 'Novak_Djokovic'
+    name2 = 'Juan_Martin_del_Potro'
+    tournament_id = '2018-560'
+    #check if the 'match' data is from a click on a node or a link. If a link, (lacks 'depth' key in data) then try to return the cached data as before (do nothing). Otherwise continue
     if 'depth' not in str(match):
         if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
             return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
-        else:
-            round, name1, name2 = "N/A","",""
-    else:
+    else: #if it is a node, get parse the match string for the round and names
         round, name1, name2 = getMatchInfo(match)
+    #get extra data if it exists
+    match_extraData = get_numerical_label_values(match)
 
-    matchString = f'-M-{current_tournament}-{round}-{name1}-{name2}'
+    #extract the needed extra data here
+    if match_extraData:
+        #match_num = match_extraData[0]
+        tournament_id = match_extraData[1]
+    
+    #try to generate a string for the match id. Try to get one dataframe from it to see if it exists
+    matchString = f'-M-{getTouramentFromValue(tournament_id)}-{round}-{name1}-{name2}'
     df1 = getMatchDataFrame(matchString,1)
+
+    if df1.empty: #IF we couldn't find data, flip the names!
+        name1, name2 = name2, name1
+        matchString = f'-M-{getTouramentFromValue(tournament_id)}-{round}-{name1}-{name2}'
+        df1 = getMatchDataFrame(matchString,1)
+    
+    #check if the match is already being displayed. If it is, return the already existing (cached) graphs if they exist. Otherwise, continue.
+    if matchString == match_cache:
+        if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
+            return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
+
+    #NOTE: IF we couldn't find data even after flipping the names, it probably just doesn't exist
+
     df2 = getMatchDataFrame(matchString,2)
 
+    #generate graphs from the two dataframes
     fig1 = drawMapGraph(df1,0.34)
     fig1Bar = drawBarGraph(df1)
 
     fig2 = drawMapGraph(df2,0.34)
     fig2Bar = drawBarGraph(df2)
 
+    #format player names for display (replace '_' with ' ')
     name1 = f"Player: {name1.replace('_',' ')}"
     name2 = f"Player: {name2.replace('_',' ')}"
+    #update the caches
     graph_player1_cache = fig1
     graph_player1_bar_cache = fig1Bar
     graph_player2_cache = fig2
     graph_player2_bar_cache = fig2Bar
     name_player1_cache = name1
     name_player2_cache = name2
-    match_cache = match #only occurs here (prevents redrawing graphs if the match is the same)
+    match_cache = matchString
+    #return the figures/values!
     return fig1, fig1Bar, fig2, fig2Bar, name1, name2
 
+#sets up the HTML
 def match_placement_view():
-    #html/formatting stuff below >_<
     graph1 = dcc.Graph(
         id='graph-player1-placement'
     )
