@@ -43,6 +43,16 @@ def getFinalistsFromTournament(tournament_id):
     }
     return namePairs[tournament_id]
 
+#makes updating the graphs when selecting from the dropdown easier
+def getSurfaceFromTournament(tournament_id):
+    surfacePairs = {
+        '2018-560': 'Hard',
+        '2018-540': 'Grass',
+        '2018-520': 'Clay',
+        '2018-580': 'Hard',
+    }
+    return surfacePairs[tournament_id]
+
 #a simple way to format the round string from the depth value of the graph
 def getDepthStringFromInt(value):
     depthList = ["N/A", "RR", "QF", "SF", "F", "N/A"]
@@ -72,16 +82,16 @@ def getMatchString(tournament_id, round, name1, name2):
     return matchString
 
 #draws the courts. df is a dataframe and xVal is the 'center' point for the random xValue for the court drawing distribution
-def drawMapGraph(df, xVal):
+def drawMapGraph(df, surface_type):
     if df.empty:
         return px.scatter(title=NOT_FOUND_STRING)
     location_map = {
-        "deuce_wide": [xVal,.75],
-        "deuce_middle": [xVal,.55], 
-        "deuce_t": [xVal,.65],
-        "ad_wide": [xVal,.25],
-        "ad_middle": [xVal,.45],
-        "ad_t": [xVal,.35],
+        "deuce_wide": [.34,.8],
+        "deuce_middle": [.34,.575], 
+        "deuce_t": [.34,.7],
+        "ad_wide": [.34,.2],
+        "ad_middle": [.34,.425],
+        "ad_t": [.34,.3],
     }
     npIndex = df.columns.values #grabs the names of the selected columns
     npVals = df.values[0].astype(np.int64) #grabs the values of the selected row
@@ -107,7 +117,7 @@ def drawMapGraph(df, xVal):
         for _ in range(0,num):
             npBigIndex.append(i)
             npBigVals[bigIndex]=npVals[index]
-            npBigSize[bigIndex]=0.025#npSize[index]
+            npBigSize[bigIndex]=0.035#npSize[index]
             npBigRelSize[bigIndex]=npSize[index]
             bigIndex+=1
         index+=1
@@ -117,7 +127,7 @@ def drawMapGraph(df, xVal):
     #add some random spreading to the points
     for i in npBigIndex:
         location = location_map[i]
-        npLocationX[index] = location[0] + (random.random()*2 - 1)*.04#(random.random()*2 - 1)*npBigSize[index]
+        npLocationX[index] = location[0] + (random.random()*2 - 1)*.07#(random.random()*2 - 1)*npBigSize[index]
         npLocationY[index] = location[1] + (random.random()*2 - 1)*npBigSize[index]
         index+=1
     formatted_df = pd.DataFrame({
@@ -163,7 +173,7 @@ def drawMapGraph(df, xVal):
     # Disable axis ticks and labels
     fig.update_xaxes(showticklabels=False, title_text="")
     fig.update_yaxes(showticklabels=False, title_text="")
-    image_file = "assets/court.jpg"
+    image_file = 'assets/Court_' + surface_type + '.png'
     image_path = os.path.join(os.getcwd(), image_file)
     from PIL import Image
     img = Image.open(image_path)
@@ -209,7 +219,7 @@ def drawMapGraph(df, xVal):
     return fig
 
 #draws the bar graphs for player serve placement
-def drawBarGraph(df):
+def drawBarGraph(df, surface_type):
     if df.empty:
         return px.bar(title=NOT_FOUND_STRING)
     npIndex = df.columns.values #grabs the names of the selected columns
@@ -221,14 +231,17 @@ def drawBarGraph(df):
             finalWords.append(word.capitalize())
         npIndex[i] = ' '.join(finalWords)
     npVals = df.values[0].astype(np.int64) #grabs the values of the selected row
+    #surface_color = 'mediumslateblue'
+    #colors = [surface_color]
     formatted_df = pd.DataFrame({
         "Location": npIndex,
-        "Value": npVals,
+        "Value": npVals
     })
     fig = px.bar(
         formatted_df,
         x="Location",
         y="Value",
+        #color_discrete_sequence=colors,
         hover_data={"Location": False, "Value": True},
     )
     #changing axis labels
@@ -258,6 +271,7 @@ def update_graphs(match,tournamentString):
     name1 = 'Novak_Djokovic'
     name2 = 'Juan_Martin_del_Potro'
     tournament_id = '2018-560'
+    surface_type = 'Hard'
     #force_update is used to prevent the code from changing the variables - instead, they are set once for special conditions
     #special conditions include: initialization and dropdown selection
     #if the dropdown is selected, we manually set the names and id of the tournament once up here, and that's it!
@@ -270,6 +284,7 @@ def update_graphs(match,tournamentString):
             if tournamentString:
                 tournament_id = tournamentString
             names = getFinalistsFromTournament(tournament_id)
+            surface_type = getSurfaceFromTournament(tournament_id)
             name1, name2 = names[0], names[1]
     else: #in the event of initialization, make sure we use those default values for the variables
         force_update = True
@@ -286,6 +301,7 @@ def update_graphs(match,tournamentString):
     if match_extraData and not force_update:
         #match_num = match_extraData[0]
         tournament_id = match_extraData[1]
+        surface_type = match_extraData[2]
     
     #try to generate a string for the match id. Try to get one dataframe from it to see if it exists
     matchString = getMatchString(tournament_id, round, name1, name2)
@@ -301,11 +317,11 @@ def update_graphs(match,tournamentString):
     df2 = getMatchDataFrame(matchString,2)
 
     #generate graphs from the two dataframes
-    fig1 = drawMapGraph(df1,0.34)
-    fig1Bar = drawBarGraph(df1)
+    fig1 = drawMapGraph(df1,surface_type)
+    fig1Bar = drawBarGraph(df1,surface_type)
 
-    fig2 = drawMapGraph(df2,0.34)
-    fig2Bar = drawBarGraph(df2)
+    fig2 = drawMapGraph(df2,surface_type)
+    fig2Bar = drawBarGraph(df2,surface_type)
 
     #format player names for display (replace '_' with ' ')
     name1 = f"Player: {name1.replace('_',' ')}"
