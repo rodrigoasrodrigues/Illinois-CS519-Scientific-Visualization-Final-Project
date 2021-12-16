@@ -12,12 +12,10 @@ import pandas as pd
 import numpy as np
 import dash_bootstrap_components as dbc
 import random
-import re
 from server import app
 from utils import get_numerical_label_values, is_not_a_node
 
 NOT_FOUND_STRING = "DETAILED DATA NOT AVAILABLE"
-
 
 #reads from the file
 file = "charting-m-stats-ServeDirection.csv"
