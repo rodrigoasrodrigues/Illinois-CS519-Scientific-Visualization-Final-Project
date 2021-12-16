@@ -2,6 +2,7 @@
 from dash import dcc
 from dash import html
 from dash import no_update
+from dash import callback_context
 from dash.dependencies import Input, Output
 import os
 import plotly.express as px
@@ -11,6 +12,7 @@ import pandas as pd
 import numpy as np
 import dash_bootstrap_components as dbc
 import random
+import re
 from server import app
 from utils import get_numerical_label_values, is_not_a_node
 
@@ -32,6 +34,16 @@ def getTouramentFromValue(value):
         'None': 'US_Open'
     }
     return valuePairs[value]
+
+#makes updating the graphs when selecting from the dropdown easier
+def getFinalistsFromTournament(tournament_id):
+    namePairs = {
+        '2018-560': ['Novak_Djokovic','Juan_Martin_del_Potro'],
+        '2018-540': ['Kevin_Anderson','Novak_Djokovic'],
+        '2018-520': ['Rafael_Nadal','Dominic_Thiem'],
+        '2018-580': ['Marin_Cilic','Roger_Federer'],
+    }
+    return namePairs[tournament_id]
 
 #a simple way to format the round string from the depth value of the graph
 def getDepthStringFromInt(value):
@@ -55,6 +67,11 @@ def getMatchDataFrame(matchString, playerNum):
     df = odf.loc[(odf['match_id'].str.contains(matchString,case=False, na=False)) & (odf['row'] == f'{playerNum} Total')]
     df = pd.DataFrame(df,columns=['deuce_wide','deuce_middle','deuce_t','ad_wide','ad_middle','ad_t'])
     return df
+
+#formats the parameters into a string for searching the file
+def getMatchString(tournament_id, round, name1, name2):
+    matchString = f'-M-{getTouramentFromValue(tournament_id)}-{round}-{name1}-{name2}'
+    return matchString
 
 #draws the courts. df is a dataframe and xVal is the 'center' point for the random xValue for the court drawing distribution
 def drawMapGraph(df, xVal):
@@ -233,38 +250,54 @@ def drawBarGraph(df):
     Output('graph-player2-placement-bar', 'figure'),
     Output('player-1-name-placement', 'children'),
     Output('player-2-name-placement', 'children'),
-    Input('tornament-plot', 'clickData')
+    Input('tornament-plot', 'clickData'),
+    Input('tournament-dropdown', 'value')
 )
-def update_graphs(match):
+def update_graphs(match,tournamentString):
     
     #setting up some variables that will be used to generate our match-id string
     round = 'F'
     name1 = 'Novak_Djokovic'
     name2 = 'Juan_Martin_del_Potro'
     tournament_id = '2018-560'
+    #force_update is used to prevent the code from changing the variables - instead, they are set once for special conditions
+    #special conditions include: initialization and dropdown selection
+    #if the dropdown is selected, we manually set the names and id of the tournament once up here, and that's it!
+    force_update = False
+    #checking for special conditions
+    if callback_context.triggered:
+        which_input = callback_context.triggered[0]['prop_id'].split('.')[1]
+        if which_input == 'value':
+            force_update = True
+            if tournamentString:
+                tournament_id = tournamentString
+            names = getFinalistsFromTournament(tournament_id)
+            name1, name2 = names[0], names[1]
+    else: #in the event of initialization, make sure we use those default values for the variables
+        force_update = True
+
     #check if the 'match' data is from a click on a node or a link. If a link, (lacks 'depth' key in data) then try to return the cached data as before (do nothing). Otherwise continue
-    if is_not_a_node(match):
+    if is_not_a_node(match) and not force_update:
         return [no_update] * 6 #prevents all 6 elements from updating
-    else: #if it is a node, get parse the match string for the round and names
+    elif not force_update: #if it is a node, get parse the match string for the round and names
         round, name1, name2 = getMatchInfo(match)
     #get extra data if it exists
     match_extraData = get_numerical_label_values(match)
 
     #extract the needed extra data here
-    if match_extraData:
+    if match_extraData and not force_update:
         #match_num = match_extraData[0]
         tournament_id = match_extraData[1]
     
     #try to generate a string for the match id. Try to get one dataframe from it to see if it exists
-    matchString = f'-M-{getTouramentFromValue(tournament_id)}-{round}-{name1}-{name2}'
+    matchString = getMatchString(tournament_id, round, name1, name2)
     df1 = getMatchDataFrame(matchString,1)
 
     if df1.empty: #IF we couldn't find data, flip the names!
         name1, name2 = name2, name1
-        matchString = f'-M-{getTouramentFromValue(tournament_id)}-{round}-{name1}-{name2}'
+        matchString = getMatchString(tournament_id, round, name1, name2)
         df1 = getMatchDataFrame(matchString,1)
     
-
     #NOTE: IF we couldn't find data even after flipping the names, it probably just doesn't exist
 
     df2 = getMatchDataFrame(matchString,2)
@@ -343,14 +376,12 @@ def match_placement_view():
             ),
         ]
     )
-    hiddenStateDiv = html.Div(id='hidden-div', style={'display':'none'})
     group1 = dbc.CardGroup([graph1Plot,graph1BarPlot])
     group2 = dbc.CardGroup([graph2Plot,graph2BarPlot])
     plot = dbc.Card([
         dbc.Row(dbc.Col([player1Title])),
         dbc.Row(dbc.Col([group1])),
         dbc.Row(dbc.Col([player2Title])),
-        dbc.Row(dbc.Col([group2])),
-        hiddenStateDiv
+        dbc.Row(dbc.Col([group2]))
     ])
     return plot
