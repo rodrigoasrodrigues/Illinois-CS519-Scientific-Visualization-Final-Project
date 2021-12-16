@@ -7,7 +7,8 @@ import dash_bootstrap_components as dbc
 import math
 from dash.dependencies import Input, Output
 from server import app
-from utils import get_numerical_label_values
+from utils import get_numerical_label_values, is_not_a_node
+from dash import no_update
 
 def generate_table(dataframe, max_rows=10):
     return html.Table([
@@ -164,6 +165,8 @@ def newMatchOrTournamentSelected(tourneyid, matchinfo):
             return getUpdatedGraphs(tourneyid, matchnum)
         elif which_input == 'clickData':
             #print("matchinfo: ", matchinfo)
+            if is_not_a_node(matchinfo):
+                return [no_update] * 5 #prevents all 5 elements from updating
             match_extraData = get_numerical_label_values(matchinfo)
             #print("match_extraData: ",match_extraData)
             if match_extraData:
