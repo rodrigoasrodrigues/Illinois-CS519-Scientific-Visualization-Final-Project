@@ -39,6 +39,7 @@ next_round = {
 
 
 def get_data(tournament_id):
+    tag_playername = '<span style="display:none">playernode</span>'
     year = tournament_id.split('-')[0]
     filename=f'data/atp_matches_{year}.csv'
     year_df = pd.read_csv(filename,index_col=False)
@@ -77,8 +78,8 @@ def get_data(tournament_id):
             
         else: # winner name
             indexes.append('F')
-            names.append(last_name_and_initials(winner_name))
-            hover_data.append([0,winner_name])
+            names.append(last_name_and_initials(winner_name)+tag_playername)
+            hover_data.append(winner_name)
             tgt = len(indexes)-1
             color_data_node.append(winner)
         target.append(tgt)
@@ -95,8 +96,8 @@ def get_data(tournament_id):
             source.append(player_idx)
             target.append(match_idx)
             winner_data.append(player_name)
-            names.append(last_name_and_initials(player_name))
-            hover_data.append([0,player_name])
+            names.append(last_name_and_initials(player_name)+tag_playername)
+            hover_data.append(player_name)
             color_data_node.append(player_id)
             color_data_link.append(player_id)
     color_set = list(set(color_data_node))

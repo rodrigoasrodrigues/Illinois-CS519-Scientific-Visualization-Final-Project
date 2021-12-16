@@ -1,6 +1,7 @@
 '''Displays Match Placement Plot'''
 from dash import dcc
 from dash import html
+from dash import no_update
 from dash.dependencies import Input, Output
 import os
 import plotly.express as px
@@ -11,18 +12,10 @@ import numpy as np
 import dash_bootstrap_components as dbc
 import random
 from server import app
-from utils import get_numerical_label_values
+from utils import get_numerical_label_values, is_not_a_node
 
 NOT_FOUND_STRING = "DETAILED DATA NOT AVAILABLE"
 
-#sets up our global variables
-graph_player1_cache=None
-graph_player2_cache=None
-graph_player1_bar_cache=None
-graph_player2_bar_cache=None
-name_player1_cache=None
-name_player2_cache=None
-match_cache=None
 
 #reads from the file
 file = "charting-m-stats-ServeDirection.csv"
@@ -243,14 +236,6 @@ def drawBarGraph(df):
     Input('tornament-plot', 'clickData')
 )
 def update_graphs(match):
-    #data we may write to
-    global match_cache
-    global graph_player1_cache
-    global graph_player1_bar_cache
-    global graph_player2_cache
-    global graph_player2_bar_cache
-    global name_player1_cache
-    global name_player2_cache
     
     #setting up some variables that will be used to generate our match-id string
     round = 'F'
@@ -258,9 +243,8 @@ def update_graphs(match):
     name2 = 'Juan_Martin_del_Potro'
     tournament_id = '2018-560'
     #check if the 'match' data is from a click on a node or a link. If a link, (lacks 'depth' key in data) then try to return the cached data as before (do nothing). Otherwise continue
-    if 'depth' not in str(match):
-        if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
-            return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
+    if is_not_a_node(match):
+        return [no_update] * 6 #prevents all 6 elements from updating
     else: #if it is a node, get parse the match string for the round and names
         round, name1, name2 = getMatchInfo(match)
     #get extra data if it exists
@@ -280,10 +264,6 @@ def update_graphs(match):
         matchString = f'-M-{getTouramentFromValue(tournament_id)}-{round}-{name1}-{name2}'
         df1 = getMatchDataFrame(matchString,1)
     
-    #check if the match is already being displayed. If it is, return the already existing (cached) graphs if they exist. Otherwise, continue.
-    if matchString == match_cache:
-        if graph_player1_cache and graph_player1_bar_cache and graph_player2_cache and graph_player2_bar_cache and name_player1_cache and name_player2_cache:
-            return graph_player1_cache, graph_player1_bar_cache, graph_player2_cache, graph_player2_bar_cache, name_player1_cache, name_player2_cache
 
     #NOTE: IF we couldn't find data even after flipping the names, it probably just doesn't exist
 
@@ -299,14 +279,6 @@ def update_graphs(match):
     #format player names for display (replace '_' with ' ')
     name1 = f"Player: {name1.replace('_',' ')}"
     name2 = f"Player: {name2.replace('_',' ')}"
-    #update the caches
-    graph_player1_cache = fig1
-    graph_player1_bar_cache = fig1Bar
-    graph_player2_cache = fig2
-    graph_player2_bar_cache = fig2Bar
-    name_player1_cache = name1
-    name_player2_cache = name2
-    match_cache = matchString
     #return the figures/values!
     return fig1, fig1Bar, fig2, fig2Bar, name1, name2
 

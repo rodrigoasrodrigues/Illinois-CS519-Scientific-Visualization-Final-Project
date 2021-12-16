@@ -168,3 +168,9 @@ def get_numerical_label_values(strobj):
     for i in range(1, len(parts), 2):
         vals.append(parts[i])
     return vals
+
+def is_not_a_node(data):
+    str_data = str(data)
+    if 'depth' not in str_data: return True # Edge / Link
+    elif 'playernode' in str_data: return True # Player Node (not match)
+    else: return False # match
