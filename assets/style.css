@@ -4,3 +4,9 @@ body h3,
 body h4 {
   color: #00703C;
 }
+.sankey path.sankey-link {
+  cursor: help;
+}
+.sankey .sankey-node {
+  cursor: pointer;
+}
