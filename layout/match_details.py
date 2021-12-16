@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 import math
 from dash.dependencies import Input, Output
 from server import app
-
+from utils import get_numerical_label_values
 
 def generate_table(dataframe, max_rows=10):
     return html.Table([
@@ -37,8 +37,9 @@ def getFinalsMatchnum(tourneyid='2018-560'):
 atp_matches2018df = pd.read_csv("data/atp_matches_2018.csv")
 charting_mstatsdf = pd.read_csv("data/charting-m-stats-Overview.csv")
 
-player_details = "Player Details"
-data_unavailable = "DETAILED DATA NOT AVAILABLE"
+
+player_details_str = "Player Details"
+data_unavailable_str = "DETAILED DATA NOT AVAILABLE"
 
 
 def getUpdatedGraphs(selected_tourneyid, selected_matchnum):
@@ -47,12 +48,14 @@ def getUpdatedGraphs(selected_tourneyid, selected_matchnum):
 
     bad_data = False
 
+    global player_details_str
+    player_details_str = "Player Details"
+
     selected_atpmatchdf = atp_matches2018df[(atp_matches2018df["tourney_id"] == selected_tourneyid) & (atp_matches2018df["match_num"] == selected_matchnum)]
 
     if (selected_atpmatchdf.shape[0] != 1):
         bad_data = True
     else:
-
 
         winner_firstname = selected_atpmatchdf["winner_name"].item().split()[0]
         winner_lastname = selected_atpmatchdf["winner_name"].item().split()[-1]
@@ -121,15 +124,17 @@ def getUpdatedGraphs(selected_tourneyid, selected_matchnum):
 
     if (bad_data == True):
         both_playersdf = pd.DataFrame()
-        player_details = data_unavailable
-        acesfig1 = px.bar(pd.DataFrame(),  title=data_unavailable)
-        acesfig2 = px.bar(pd.DataFrame(),  title =data_unavailable)
+        player_details_str = data_unavailable_str
 
-        fstsrvfig1 = px.line(pd.DataFrame(), title=data_unavailable)
-        fstsrvfig2 = px.line(pd.DataFrame(), title=data_unavailable)
+        acesfig1 = px.bar(pd.DataFrame(),  title=data_unavailable_str)
+        acesfig2 = px.bar(pd.DataFrame(),  title =data_unavailable_str)
+
+        fstsrvfig1 = px.line(pd.DataFrame(), title=data_unavailable_str)
+        fstsrvfig2 = px.line(pd.DataFrame(), title=data_unavailable_str)
 
     return generate_table(both_playersdf), acesfig1, acesfig2, fstsrvfig1, fstsrvfig2
     
+
 
 
 @app.callback(
@@ -138,12 +143,51 @@ def getUpdatedGraphs(selected_tourneyid, selected_matchnum):
     Output('aces-graph-2', 'figure'),
     Output('fstsrv-graph-1', 'figure'),
     Output('fstsrv-graph-2', 'figure'),
-    Input('tournament-dropdown', 'value')
+    Input('tournament-dropdown', 'value'),
+    Input('tornament-plot', 'clickData')
 )
-def newTournamentSelected(tourneyid):
-    matchnum = getFinalsMatchnum(tourneyid)
-    return getUpdatedGraphs(tourneyid, matchnum)
-    
+def newMatchOrTournamentSelected(tourneyid, matchinfo):
+
+    bad_data = False
+    global player_details_str
+    player_details_str = "Player Details"
+
+    ctx = dash.callback_context
+    #print ("ctx.triggered: ", ctx.triggered)
+    if not ctx.triggered:
+        matchnum = getFinalsMatchnum('2018-560')
+        return getUpdatedGraphs('2018-560', matchnum)
+    else: 
+        which_input = ctx.triggered[0]['prop_id'].split('.')[1]
+        if which_input == 'value':
+            matchnum = getFinalsMatchnum(tourneyid)
+            return getUpdatedGraphs(tourneyid, matchnum)
+        elif which_input == 'clickData':
+            #print("matchinfo: ", matchinfo)
+            match_extraData = get_numerical_label_values(matchinfo)
+            #print("match_extraData: ",match_extraData)
+            if match_extraData:
+                matchnum = int(match_extraData[0])
+                tourneyid = match_extraData[1]
+                return getUpdatedGraphs(tourneyid, matchnum)
+            else:
+                bad_data = True
+                #print("2no match_extraData")
+        else:
+            bad_data = True
+            #print("3whichinfo didn't match")
+
+    if bad_data == True:
+        both_playersdf = pd.DataFrame()
+        player_details_str = data_unavailable_str
+
+        acesfig1 = px.bar(pd.DataFrame(),  title=data_unavailable_str)
+        acesfig2 = px.bar(pd.DataFrame(),  title =data_unavailable_str)
+
+        fstsrvfig1 = px.line(pd.DataFrame(), title=data_unavailable_str)
+        fstsrvfig2 = px.line(pd.DataFrame(), title=data_unavailable_str)
+
+        return generate_table(both_playersdf), acesfig1, acesfig2, fstsrvfig1, fstsrvfig2
 
 def match_details_view():
     details = dbc.Card(
@@ -151,7 +195,7 @@ def match_details_view():
             dbc.CardHeader(""),
             dbc.CardBody(
                 [
-                    html.H4(player_details, className="card-title"),
+                    html.H4(player_details_str, className="card-title"),
                     html.P("Player Information", className="card-text"),
                     html.Div(id="playerdetailstable")
                 ]
