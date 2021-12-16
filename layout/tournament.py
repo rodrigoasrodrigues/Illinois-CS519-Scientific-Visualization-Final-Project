@@ -44,7 +44,7 @@ def get_data(tournament_id):
     filename=f'data/atp_matches_{year}.csv'
     year_df = pd.read_csv(filename,index_col=False)
     # only what is needed for the plot
-    columns = ['match_num','score','round','winner_name', 'winner_id', 'loser_name', 'loser_id']
+    columns = ['surface','match_num','score','round','winner_name', 'winner_id', 'loser_name', 'loser_id']
     tournament_df = year_df.loc[year_df['tourney_id'] == tournament_id, columns]
     # transform the data for the expected format
     indexes = list(tournament_df.match_num)
@@ -54,7 +54,7 @@ def get_data(tournament_id):
     target = []
     color_data_link=[]
     winner_data = []
-    hover_data = [f' {i[0]} x {i[1]} <br> {i[2]} <span style="display:none;">#{i[3]}# #{tournament_id}#</span> ' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"],tournament_df["score"],tournament_df["match_num"])]
+    hover_data = [f' {i[0]} x {i[1]} <br> {i[2]} <span style="display:none;">#{i[3]}# #{tournament_id}# #{i[4]}#</span> ' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"],tournament_df["score"],tournament_df["match_num"],tournament_df["surface"])]
     names = ['' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
     players = {}
     # LINKS
