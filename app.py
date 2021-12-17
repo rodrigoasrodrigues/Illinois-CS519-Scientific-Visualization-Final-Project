@@ -64,7 +64,7 @@ app.layout = dbc.Container([
                             match_placement_view()
                         ])
                     ])
-                    , lg=12, xl=6, className="mb-4"
+                    , lg=12, xl=6, className="mb-4 lp-12"
                 )
                 ,
                 dbc.Col(
@@ -73,7 +73,7 @@ app.layout = dbc.Container([
                             aces_serves_view()
                         ])
                     ])
-                    , lg=12, xl=6, className="mb-4"
+                    , lg=12, xl=6, className="mb-4 lp-12"
                 )
                 
             ],

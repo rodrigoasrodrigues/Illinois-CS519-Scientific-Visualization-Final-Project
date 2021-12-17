@@ -29,3 +29,9 @@ body footer {
 .table th {
   text-transform: capitalize;
 }
+@media (min-width: 1200px) and (max-width: 2000px) {
+  .lp-12 {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}
