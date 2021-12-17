@@ -103,23 +103,18 @@ default_titles = {
 )
 def update_match_texts(tournament, data):
     if callback_context.triggered:
-        print(callback_context.triggered)
         which_input = callback_context.triggered[0]['prop_id'].split('.')[1]
         if which_input == 'value': # drop down
-            print('VALUEEEEEE')
             return default_titles[tournament]
         elif which_input == 'clickData':
-            print('Click Data')
             if is_not_a_node(data):
                 return [no_update] * 2
             title, score = data['points'][0]['customdata'].split('<br>')
             score = score.split('<')[0]
             return title, score
         else:
-            print('Else')
             return [no_update] * 2
     else:
-        print('No context')
         return [no_update] * 2
 
 if __name__ == '__main__':

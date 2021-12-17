@@ -63,7 +63,7 @@ def getMatchInfo(match):
     round = getDepthStringFromInt(match['points'][0]['depth'])
     if round == "N/A":
         return round, "", ""
-    customData = match['points'][0]['customdata']
+    customData = match['points'][0]['customdata'].split('(')[0]
     splitData = customData.split('<br>')
     splitNames = splitData[0].split(' x ')
     name1 = splitNames[0].strip().replace(' ','_')
