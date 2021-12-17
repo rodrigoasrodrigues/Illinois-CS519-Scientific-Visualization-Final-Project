@@ -21,7 +21,11 @@ body footer {
 }
 .sankey .sankey-node .node-label {
   font-size: 0.9em !important;
+  font-weight: bold;
 }
 .card_title.card-body {
   padding: 5px 15px;
+}
+.table th {
+  text-transform: capitalize;
 }
