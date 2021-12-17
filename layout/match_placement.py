@@ -125,6 +125,7 @@ def drawMapGraph(df, surface_type):
     npLocationY = np.zeros(npBigVals.shape[0],dtype=np.float64) #gets Y position of where serve should be
     index = 0
     #add some random spreading to the points
+    random.seed(123)
     for i in npBigIndex:
         location = location_map[i]
         npLocationX[index] = location[0] + (random.random()*2 - 1)*.07#(random.random()*2 - 1)*npBigSize[index]
