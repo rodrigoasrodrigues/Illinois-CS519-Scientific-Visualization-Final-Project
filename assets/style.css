@@ -1,12 +1,27 @@
+body {
+  font-size: 1.2em;
+}
 body h1,
 body h2,
 body h3,
 body h4 {
   color: #00703C;
 }
+body h4 {
+  font-size: 1.5em;
+}
+body footer {
+  padding-bottom: 20px;
+}
 .sankey path.sankey-link {
   cursor: help;
 }
 .sankey .sankey-node {
   cursor: pointer;
+}
+.sankey .sankey-node .node-label {
+  font-size: 0.9em !important;
+}
+.card_title.card-body {
+  padding: 5px 15px;
 }

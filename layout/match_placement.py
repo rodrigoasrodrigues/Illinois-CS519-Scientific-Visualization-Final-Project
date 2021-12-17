@@ -55,7 +55,7 @@ def getSurfaceFromTournament(tournament_id):
 
 #a simple way to format the round string from the depth value of the graph
 def getDepthStringFromInt(value):
-    depthList = ["N/A", "RR", "QF", "SF", "F", "N/A"]
+    depthList = ["N/A", "QF", "SF", "F", "N/A"]
     return depthList[value]
 
 #grabs the round of the tournament (formatted), and player names. Names will be empty if the match isn't valid
@@ -377,7 +377,7 @@ def match_placement_view():
             dbc.CardBody(
                 [
                     html.H4("Player: ", className="card-title", id="player-1-name-placement"),
-                ]
+                ], className="card_title"
             ),
         ]
     )
@@ -386,7 +386,7 @@ def match_placement_view():
             dbc.CardBody(
                 [
                     html.H4("Player: ", className="card-title", id="player-2-name-placement"),
-                ]
+                ], className="card_title"
             ),
         ]
     )

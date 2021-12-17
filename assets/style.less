@@ -2,8 +2,16 @@
 @wimbledon-green-text: #00703C;
 
 body{
+    font-size:1.2em;
     h1,h2,h3,h4{
         color: @wimbledon-green-text;
+    }
+    h4{
+        font-size: 1.5em;
+    }
+
+    footer{
+        padding-bottom: 20px;
     }
 }
 
@@ -13,6 +21,13 @@ body{
     }
     .sankey-node{
         cursor: pointer;
+        .node-label{
+            font-size: 0.9em !important;
+        }
         
     }
+}
+
+.card_title.card-body {
+    padding: 5px 15px;
 }
