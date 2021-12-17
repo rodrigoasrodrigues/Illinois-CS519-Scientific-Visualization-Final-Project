@@ -86,12 +86,12 @@ def drawMapGraph(df, surface_type):
     if df.empty:
         return px.scatter(title=NOT_FOUND_STRING)
     location_map = {
-        "deuce_wide": [.34,.8],
-        "deuce_middle": [.34,.575], 
-        "deuce_t": [.34,.7],
-        "ad_wide": [.34,.2],
-        "ad_middle": [.34,.425],
-        "ad_t": [.34,.3],
+        "deuce_wide": [.28,.82],
+        "deuce_middle": [.28,.56], 
+        "deuce_t": [.28,.675],
+        "ad_wide": [.28,.18],
+        "ad_middle": [.28,.46],
+        "ad_t": [.28,.325],
     }
     npIndex = df.columns.values #grabs the names of the selected columns
     npVals = df.values[0].astype(np.int64) #grabs the values of the selected row
@@ -128,7 +128,7 @@ def drawMapGraph(df, surface_type):
     random.seed(123)
     for i in npBigIndex:
         location = location_map[i]
-        npLocationX[index] = location[0] + (random.random()*2 - 1)*.07#(random.random()*2 - 1)*npBigSize[index]
+        npLocationX[index] = location[0] + (random.random()*2 - 1)*.04#(random.random()*2 - 1)*npBigSize[index]
         npLocationY[index] = location[1] + (random.random()*2 - 1)*npBigSize[index]
         index+=1
     formatted_df = pd.DataFrame({
