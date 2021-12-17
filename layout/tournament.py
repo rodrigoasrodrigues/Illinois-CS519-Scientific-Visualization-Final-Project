@@ -22,7 +22,8 @@ def drop_down_tournament():
                 {'label': '2018 - Roland Garros', 'value': '2018-520'},
                 {'label': '2018 - Australian Open', 'value': '2018-580'}
             ],
-            value='2018-560'
+            value='2018-560',
+            className="mb-2"
         )
     return ddl
 
@@ -49,12 +50,12 @@ def get_data(tournament_id):
     # transform the data for the expected format
     indexes = list(tournament_df.match_num)
     color_data_node = list(tournament_df.winner_id)
-    gen_links = (x for x in tournament_df.itertuples() if x.round in ['F','SF','QF','R16']) 
+    gen_links = (x for x in tournament_df.itertuples() if x.round in ['F','SF','QF']) 
     source = []
     target = []
     color_data_link=[]
     winner_data = []
-    hover_data = [f' {i[0]} x {i[1]} <br> {i[2]} <span style="display:none;">#{i[3]}# #{tournament_id}# #{i[4]}#</span> ' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"],tournament_df["score"],tournament_df["match_num"],tournament_df["surface"])]
+    hover_data = [f' {i[0]} x {i[1]} ({i[5]}) <br> {i[2]} <span style="display:none;">#{i[3]}# #{tournament_id}# #{i[4]}#</span> ' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"],tournament_df["score"],tournament_df["match_num"],tournament_df["surface"],tournament_df["round"])]
     names = ['' for i in zip(tournament_df["winner_name"],tournament_df["loser_name"])]
     players = {}
     # LINKS

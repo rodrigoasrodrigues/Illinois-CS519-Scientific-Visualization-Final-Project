@@ -195,7 +195,6 @@ def newMatchOrTournamentSelected(tourneyid, matchinfo):
 def match_details_view():
     details = dbc.Card(
         [
-            dbc.CardHeader(""),
             dbc.CardBody(
                 [
                     html.H4(player_details_str, className="card-title"),
@@ -203,12 +202,14 @@ def match_details_view():
                     html.Div(id="playerdetailstable")
                 ]
             ),
-            dbc.CardFooter(""),
-        ]
+        ], className="mb-4"
     )
+    
+    return details
+
+def aces_serves_view():
     aces = dbc.Card(
         [
-            dbc.CardHeader(""),
             dbc.CardBody(
                 [
                     html.H4("Aces ", className="card-title"),
@@ -217,14 +218,10 @@ def match_details_view():
             ),
             dcc.Graph(id='aces-graph-1'),
             dcc.Graph(id='aces-graph-2'),
-            dbc.CardFooter(""),
         ]
-        
-        
     )
     serves = dbc.Card(
         [
-            dbc.CardHeader(""),
             dbc.CardBody(
                 [
                     html.H4("First serve % ", className="card-title"),
@@ -233,12 +230,7 @@ def match_details_view():
             ),
             dcc.Graph(id='fstsrv-graph-1'),
             dcc.Graph(id='fstsrv-graph-2'),
-            dbc.CardFooter(""),
         ]
     )
     group = dbc.CardGroup([aces,serves])
-    layout = html.Div([
-        dbc.Row(dbc.Col([details])),
-        dbc.Row(dbc.Col([group]))
-    ])
-    return layout
+    return group
